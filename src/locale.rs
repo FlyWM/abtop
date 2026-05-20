@@ -118,6 +118,7 @@ static LOCALE_EN: LazyLock<std::collections::HashMap<&str, &str>> = LazyLock::ne
     m.insert("help.refresh", "force refresh");
     m.insert("help.quit", "quit");
     m.insert("help.view_menu", "open view menu");
+    m.insert("help.task_overlay", "open task status");
     m.insert("help.open_config", "open config");
     m.insert("help.cycle_theme", "cycle theme / toggle tree");
     m.insert("help.toggle_timeline", "toggle timeline");
@@ -137,6 +138,7 @@ static LOCALE_EN: LazyLock<std::collections::HashMap<&str, &str>> = LazyLock::ne
     m.insert("footer.kill", "kill");
     m.insert("footer.filter", "filter");
     m.insert("footer.view", "view");
+    m.insert("footer.task_overlay", "tasks");
     m.insert("footer.config", "config");
     m.insert("footer.help", "help");
     m.insert("footer.quit", "quit");
@@ -165,6 +167,14 @@ static LOCALE_EN: LazyLock<std::collections::HashMap<&str, &str>> = LazyLock::ne
     m.insert("view.mcp_session_hide", "mcp session hide");
     m.insert("view.cycle_theme", "cycle theme");
     m.insert("view.key_toggle", "key = toggle  ·  Esc = close ");
+
+    // Task status overlay
+    m.insert("task_overlay.title", " Task Status ");
+    m.insert("task_overlay.no_sessions", "no sessions");
+    m.insert(
+        "task_overlay.too_small",
+        "Task status overlay unavailable below 40 columns",
+    );
 
     // Header
     m.insert("header.cpu", "CPU");
@@ -363,6 +373,7 @@ static LOCALE_ZH: LazyLock<std::collections::HashMap<&str, &str>> = LazyLock::ne
     m.insert("help.refresh", "强制刷新");
     m.insert("help.quit", "退出");
     m.insert("help.view_menu", "打开视图菜单");
+    m.insert("help.task_overlay", "open task status");
     m.insert("help.open_config", "打开配置");
     m.insert("help.cycle_theme", "切换主题 / 切换树视图");
     m.insert("help.toggle_timeline", "切换时间线");
@@ -379,6 +390,7 @@ static LOCALE_ZH: LazyLock<std::collections::HashMap<&str, &str>> = LazyLock::ne
     m.insert("footer.kill", "终止");
     m.insert("footer.filter", "过滤");
     m.insert("footer.view", "视图");
+    m.insert("footer.task_overlay", "tasks");
     m.insert("footer.config", "配置");
     m.insert("footer.help", "帮助");
     m.insert("footer.quit", "退出");
@@ -407,6 +419,14 @@ static LOCALE_ZH: LazyLock<std::collections::HashMap<&str, &str>> = LazyLock::ne
     m.insert("view.mcp_session_hide", "隐藏 MCP 会话");
     m.insert("view.cycle_theme", "切换主题");
     m.insert("view.key_toggle", "按键切换  ·  Esc 关闭 ");
+
+    // Task status overlay
+    m.insert("task_overlay.title", " Task Status ");
+    m.insert("task_overlay.no_sessions", "no sessions");
+    m.insert(
+        "task_overlay.too_small",
+        "Task status overlay unavailable below 40 columns",
+    );
 
     // Header
     m.insert("header.cpu", "CPU");

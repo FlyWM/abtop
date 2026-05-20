@@ -147,6 +147,10 @@ pub struct App {
     pub help_open: bool,
     /// View leader overlay (`v`) visibility.
     pub view_open: bool,
+    /// Task status overlay (`g`) visibility.
+    pub task_overlay_open: bool,
+    /// Selected row index within the task overlay.
+    pub task_overlay_selected: usize,
 }
 
 impl App {
@@ -202,6 +206,8 @@ impl App {
             agent_aggregate: AgentAggregate::default(),
             help_open: false,
             view_open: false,
+            task_overlay_open: false,
+            task_overlay_selected: 0,
         }
     }
 
@@ -209,6 +215,8 @@ impl App {
         self.help_open = !self.help_open;
         if self.help_open {
             self.view_open = false;
+            self.config_open = false;
+            self.task_overlay_open = false;
         }
     }
 
@@ -216,6 +224,18 @@ impl App {
         self.view_open = !self.view_open;
         if self.view_open {
             self.help_open = false;
+            self.config_open = false;
+            self.task_overlay_open = false;
+        }
+    }
+
+    pub fn toggle_task_overlay(&mut self) {
+        self.task_overlay_open = !self.task_overlay_open;
+        if self.task_overlay_open {
+            self.help_open = false;
+            self.view_open = false;
+            self.config_open = false;
+            self.task_overlay_selected = self.selected.min(self.sessions.len().saturating_sub(1));
         }
     }
 
@@ -271,6 +291,9 @@ impl App {
         self.config_open = !self.config_open;
         if self.config_open {
             self.config_selected = 0;
+            self.help_open = false;
+            self.view_open = false;
+            self.task_overlay_open = false;
         }
     }
 
@@ -488,6 +511,9 @@ impl App {
         if self.selected >= self.sessions.len() && !self.sessions.is_empty() {
             self.selected = self.sessions.len() - 1;
         }
+        if self.task_overlay_selected >= self.sessions.len() && !self.sessions.is_empty() {
+            self.task_overlay_selected = self.sessions.len() - 1;
+        }
         self.clamp_selection_to_visible();
 
         // Compute rate as sum of per-session deltas (stable across session churn).
@@ -674,6 +700,25 @@ impl App {
         } else {
             self.selected = *visible.last().unwrap();
         }
+    }
+
+    pub fn task_overlay_select_next(&mut self) {
+        if self.task_overlay_selected + 1 < self.sessions.len() {
+            self.task_overlay_selected += 1;
+        }
+    }
+
+    pub fn task_overlay_select_prev(&mut self) {
+        self.task_overlay_selected = self.task_overlay_selected.saturating_sub(1);
+    }
+
+    pub fn task_overlay_confirm(&mut self) {
+        if self.task_overlay_selected < self.sessions.len() {
+            self.selected = self.task_overlay_selected;
+            self.filter_active = false;
+            self.filter_text.clear();
+        }
+        self.task_overlay_open = false;
     }
 
     pub fn select_session(&mut self, index: usize) {

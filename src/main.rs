@@ -2,6 +2,7 @@ mod app;
 mod collector;
 mod config;
 mod demo;
+mod float_window;
 mod host_info;
 mod locale;
 mod model;
@@ -23,19 +24,21 @@ use std::io::{self, stdout};
 use std::time::Duration;
 
 fn main() -> io::Result<()> {
+    let args: Vec<String> = std::env::args().collect();
+
     // --version / -V flag: print version and exit
-    if std::env::args().any(|a| a == "--version" || a == "-V") {
+    if has_flag(&args, "--version") || has_flag(&args, "-V") {
         println!("abtop {}", env!("CARGO_PKG_VERSION"));
         return Ok(());
     }
 
     // --update flag: self-update via GitHub releases installer
-    if std::env::args().any(|a| a == "--update") {
+    if has_flag(&args, "--update") {
         return run_update();
     }
 
     // --setup flag: configure StatusLine hook and exit
-    if std::env::args().any(|a| a == "--setup") {
+    if has_flag(&args, "--setup") {
         setup::run_setup();
         return Ok(());
     }
@@ -74,11 +77,18 @@ fn main() -> io::Result<()> {
         })
         .or_else(|| theme::Theme::by_name(&cfg.theme));
 
-    let demo_mode = std::env::args().any(|a| a == "--demo");
-    let exit_on_jump = std::env::args().any(|a| a == "--exit-on-jump");
+    let demo_mode = has_flag(&args, "--demo");
+    let exit_on_jump = has_flag(&args, "--exit-on-jump");
+
+    if has_flag(&args, "--float") {
+        if !float_window::is_supported_platform() {
+            eprintln!("abtop --float is supported only on Linux and macOS");
+        }
+        return float_window::run(initial_theme, &cfg.hidden_agents, cfg.panels, demo_mode);
+    }
 
     // --once flag: print snapshot and exit
-    if std::env::args().any(|a| a == "--once") {
+    if has_flag(&args, "--once") {
         let mut app = App::new_with_config(
             initial_theme.unwrap_or_default(),
             &cfg.hidden_agents,
@@ -153,11 +163,16 @@ fn run_app(
             match event::read()? {
                 Event::Key(key) if key.kind == KeyEventKind::Press => {
                     if app.help_open {
-                        // Any key dismisses help.
-                        app.help_open = false;
+                        if matches!(key.code, KeyCode::Char('g')) {
+                            app.toggle_task_overlay();
+                        } else {
+                            // Any other key dismisses help.
+                            app.help_open = false;
+                        }
                     } else if app.view_open {
                         match key.code {
                             KeyCode::Esc | KeyCode::Char('v') => app.view_open = false,
+                            KeyCode::Char('g') => app.toggle_task_overlay(),
                             KeyCode::Char('T') => app.tree_view = !app.tree_view,
                             KeyCode::Char('l') => app.toggle_timeline(),
                             KeyCode::Char('f') => app.toggle_file_audit(),
@@ -171,9 +186,18 @@ fn run_app(
                             KeyCode::Esc | KeyCode::Char('q') | KeyCode::Char('c') => {
                                 app.toggle_config()
                             }
+                            KeyCode::Char('g') => app.toggle_task_overlay(),
                             KeyCode::Down | KeyCode::Char('j') => app.config_select_next(),
                             KeyCode::Up | KeyCode::Char('k') => app.config_select_prev(),
                             KeyCode::Enter | KeyCode::Char(' ') => app.config_toggle_selected(),
+                            _ => {}
+                        }
+                    } else if app.task_overlay_open {
+                        match key.code {
+                            KeyCode::Esc | KeyCode::Char('g') => app.task_overlay_open = false,
+                            KeyCode::Down | KeyCode::Char('j') => app.task_overlay_select_next(),
+                            KeyCode::Up | KeyCode::Char('k') => app.task_overlay_select_prev(),
+                            KeyCode::Enter => app.task_overlay_confirm(),
                             _ => {}
                         }
                     } else if app.filter_active {
@@ -210,6 +234,7 @@ fn run_app(
                             KeyCode::Char('M') => app.toggle_mcp_session_suppression(),
                             KeyCode::Char('c') => app.toggle_config(),
                             KeyCode::Char('v') => app.toggle_view_menu(),
+                            KeyCode::Char('g') => app.toggle_task_overlay(),
                             KeyCode::Char('?') => app.toggle_help(),
                             KeyCode::Char('/') => app.filter_active = true,
                             KeyCode::Esc if !app.filter_text.is_empty() => app.clear_filter(),
@@ -252,6 +277,10 @@ fn run_app(
     }
 
     Ok(())
+}
+
+fn has_flag(args: &[String], flag: &str) -> bool {
+    args.iter().any(|arg| arg == flag)
 }
 
 fn handle_mouse_event(app: &mut App, mouse: MouseEvent, area: Rect) {
@@ -455,5 +484,24 @@ fn fmt_tok(n: u64) -> String {
         format!("{:.1}k", n as f64 / 1_000.0)
     } else {
         format!("{}", n)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::has_flag;
+
+    #[test]
+    fn has_flag_matches_complete_arguments_only() {
+        let args = vec![
+            "abtop".to_string(),
+            "--float".to_string(),
+            "--theme".to_string(),
+            "btop".to_string(),
+        ];
+
+        assert!(has_flag(&args, "--float"));
+        assert!(!has_flag(&args, "--flo"));
+        assert!(!has_flag(&args, "float"));
     }
 }

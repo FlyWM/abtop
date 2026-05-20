@@ -50,6 +50,17 @@ pub(crate) fn draw_footer(f: &mut Frame, app: &App, area: Rect, theme: &Theme) {
         return;
     }
 
+    if app.task_overlay_open && area.width < 40 {
+        f.render_widget(
+            Paragraph::new(Line::from(Span::styled(
+                t("task_overlay.too_small"),
+                Style::default().fg(theme.warning_fg),
+            ))),
+            area,
+        );
+        return;
+    }
+
     let has_tmux = std::env::var("TMUX").is_ok();
     let compact = area.width <= 80;
     let ultra_compact = area.width <= 70;
@@ -85,6 +96,11 @@ pub(crate) fn draw_footer(f: &mut Frame, app: &App, area: Rect, theme: &Theme) {
         Style::default().fg(theme.main_fg),
     ));
     if !ultra_compact {
+        spans.push(Span::styled("g", Style::default().fg(theme.hi_fg)));
+        spans.push(Span::styled(
+            format!(" {} ", t("footer.task_overlay")),
+            Style::default().fg(theme.main_fg),
+        ));
         spans.push(Span::styled("v", Style::default().fg(theme.hi_fg)));
         spans.push(Span::styled(
             format!(" {} ", t("footer.view")),

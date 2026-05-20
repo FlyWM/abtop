@@ -8,6 +8,7 @@ mod ports;
 mod projects;
 mod quota;
 mod sessions;
+mod task_overlay;
 mod tokens;
 mod view_menu;
 
@@ -708,6 +709,9 @@ fn draw_overlays(f: &mut Frame, app: &App, theme: &Theme) {
     }
     if app.help_open {
         help::draw_help_overlay(f, theme);
+    }
+    if app.task_overlay_open {
+        task_overlay::draw_task_overlay(f, app, theme);
     }
 }
 

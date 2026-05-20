@@ -20,6 +20,7 @@ fn get_entries() -> Vec<(String, String)> {
         ("  r".to_string(), t("help.refresh")),
         ("  q".to_string(), t("help.quit")),
         (t("help.views"), String::new()),
+        ("  g".to_string(), t("help.task_overlay")),
         ("  v".to_string(), t("help.view_menu")),
         ("  c".to_string(), t("help.open_config")),
         ("  t / T".to_string(), t("help.cycle_theme")),
